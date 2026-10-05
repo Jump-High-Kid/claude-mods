@@ -97,3 +97,30 @@ test('레포·모델·effort: session.start 로 레포·모델, 메인 루프 tu
     await ui.unmount()
   }
 })
+
+test('좁은 화면: 레포가 다음 줄로 밀릴 상황이면 이름을 줄여 앞 줄에 붙임', async ($, on) => {
+  engine(on)
+  on('session.start', (_$, e) => ({ cwd: e.cwd }))
+  on('session.usage', () => ({
+    value: { startedAt: NOW, context: { window: 1_000_000 }, rateLimits: [{ kind: 'five_hour' as const, percentUsed: 82 }] },
+  }))
+  on('session.repo', () => ({ value: { root: '/x/very-long-folder-name', remote: null, internal: false, name: null } }))
+  on('session.model', () => ({ value: 'claude-opus-5-5[1m]' }))
+  await $.session.start({ cwd: '/x/very-long-folder-name', surface: 'terminal', isInteractive: true })
+
+  // 'Current session 82%'(19) + 3 + 레포 + ' Opus 5.5 (1M)'(14) ≤ 45 → 레포 9칸
+  const narrow = { ...BAND, props: { ...BAND.props, bodyColumns: 45 } }
+  let ui = await $.ui.mount({ plugin: 'usage-status', surface: 'terminal', ...narrow })
+  expect(await ui.find({ type: 'Text', text: 'very-lon…' })).toBeDefined()
+  await ui.unmount()
+
+  // 넓으면 그대로
+  ui = await $.ui.mount({ plugin: 'usage-status', surface: 'terminal', ...BAND })
+  expect(await ui.find({ type: 'Text', text: 'very-long-folder-name' })).toBeDefined()
+  await ui.unmount()
+
+  // 너무 좁아 4칸 미만으로 줄여야 하면 줄이지 않음(다음 줄로)
+  const tiny = { ...BAND, props: { ...BAND.props, bodyColumns: 38 } }
+  ui = await $.ui.mount({ plugin: 'usage-status', surface: 'terminal', ...tiny })
+  expect(await ui.find({ type: 'Text', text: 'very-long-folder-name' })).toBeDefined()
+})

@@ -7,6 +7,8 @@ import type { Limit, Where } from '../types'
 // 70% 경고 임계 = 기본 경고 알림.
 const TITLES: Record<string, string> = { five_hour: 'Current session', seven_day: 'Current week' }
 const WARN_AT = 70
+const GAP = 3 // 묶음 사이 칸
+const MIN_REPO = 4 // 이보다 짧게 줄여야 하면 줄이지 않고 다음 줄로 넘김
 
 const limits = atom({ plugin: 'usage-status', key: 'limits' } as const, [] as Limit[])
 // 컨텍스트 창 사용률(%) — 첫 응답 전·압축 직후엔 null
@@ -45,6 +47,17 @@ function formatReset(iso: string, now: Date): string {
         })
       : at.toLocaleTimeString('en-US', { hour: 'numeric', minute, hour12: true })
   return text.replace(/[  ]([AP]M)/i, (_, ampm: string) => ampm.toLowerCase())
+}
+
+// 좁은 화면에서 레포 묶음이 혼자 다음 줄로 밀릴 상황이면, 앞 줄에 붙도록 레포 이름을 '…'로 줄인다.
+// before = 앞 묶음들 너비, rest = 레포 뒤 모델·effort 너비. flexWrap 과 같은 순서로 줄을 채워 본다.
+// ponytail: 너비 = 글자 수(한글 폴더명은 2칸이라 오차) — 한글 폴더 쓰면 전각 너비 계산 추가
+function fitRepo(repo: string, before: number[], rest: number, columns: number): string {
+  let line = 0
+  for (const w of before) line = line === 0 || line + GAP + w > columns ? w : line + GAP + w
+  const room = columns - (line === 0 ? 0 : line + GAP) - rest
+  if (repo.length <= room || room < MIN_REPO) return repo
+  return `${repo.slice(0, room - 1)}…`
 }
 
 export const register: Register = on => {
@@ -92,24 +105,28 @@ export const register: Register = on => {
 
     const now = new Date(await $.clock.now())
     const { Box, Text } = $.ui.resolve(e)
+    const resets = items.map(({ resetsAt }) => (resetsAt ? `· ${formatReset(resetsAt, now)}` : ''))
+    const widths = items.map(({ title, pct }, i) => `${title} ${pct}%`.length + (resets[i] ? 1 + resets[i]!.length : 0))
+    const tail = [model ? modelName(model) : '', effort ? `· ${effort}` : ''].filter(Boolean)
+    const shownRepo = repo ? fitRepo(repo, widths, tail.reduce((n, t) => n + 1 + t.length, 0), e.props.bodyColumns) : ''
 
     // 'Current session 56% · 1:50pm   Current week 69% · 9am   Context 11%   my-repo Opus 5.5 (1M) · high' 한 줄
     // 좁은 화면(모바일)에선 그룹을 누르지 않고(flexShrink 0) 그룹 단위로 다음 줄로 넘긴다(flexWrap)
     return (
       <Box key="line" flexDirection="row" flexWrap="wrap" columnGap={3}>
-        {items.map(({ title, pct, resetsAt }) => {
+        {items.map(({ title, pct }, i) => {
           const tone = toneOf(pct)
           return (
             <Box key={title} flexDirection="row" flexShrink={0} gap={1}>
               <Text bold>{title}</Text>
               <Text {...(tone ? { color: tone } : {})}>{`${pct}%`}</Text>
-              {resetsAt ? <Text dimColor>{`· ${formatReset(resetsAt, now)}`}</Text> : null}
+              {resets[i] ? <Text dimColor>{resets[i]}</Text> : null}
             </Box>
           )
         })}
         {repo ? (
           <Box key="where" flexDirection="row" flexShrink={0} gap={1}>
-            <Text bold>{repo}</Text>
+            <Text bold>{shownRepo}</Text>
             {model ? <Text>{modelName(model)}</Text> : null}
             {effort ? <Text dimColor>{`· ${effort}`}</Text> : null}
           </Box>
