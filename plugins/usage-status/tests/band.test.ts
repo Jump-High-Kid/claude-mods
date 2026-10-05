@@ -38,6 +38,9 @@ test('한 줄: 5h·7d·Context, 막대·used·Resets·시간대 없음, 사용�
     const ui = await $.ui.mount({ plugin: 'usage-status', surface, ...BAND })
 
     expect((await ui.find({ key: 'line' }))?.props.flexDirection).toBe('row')
+    // 좁은 화면: 그룹 단위 줄바꿈 (그룹 안 글자 줄바꿈 X)
+    expect((await ui.find({ key: 'line' }))?.props.flexWrap).toBe('wrap')
+    expect((await ui.find({ key: 'Current session' }))?.props.flexShrink).toBe(0)
     // spend_limit 은 그리지 않음 → 제목 3개
     expect(await ui.findAll({ type: 'Text', text: /^(Current (session|week)|Context)$/ })).toHaveLength(3)
 

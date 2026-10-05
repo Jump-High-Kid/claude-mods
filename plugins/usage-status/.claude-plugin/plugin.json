@@ -1,6 +1,6 @@
 {
   "name": "usage-status",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "One line above the prompt: 5h/weekly usage with reset times, context %, repo, model and effort",
   "author": { "name": "Jump-High-Kid", "url": "https://github.com/Jump-High-Kid" },
   "homepage": "https://github.com/Jump-High-Kid/claude-mods",

@@ -94,12 +94,13 @@ export const register: Register = on => {
     const { Box, Text } = $.ui.resolve(e)
 
     // 'Current session 56% · 1:50pm   Current week 69% · 9am   Context 11%   my-repo Opus 5.5 (1M) · high' 한 줄
+    // 좁은 화면(모바일)에선 그룹을 누르지 않고(flexShrink 0) 그룹 단위로 다음 줄로 넘긴다(flexWrap)
     return (
-      <Box key="line" flexDirection="row" gap={3}>
+      <Box key="line" flexDirection="row" flexWrap="wrap" columnGap={3}>
         {items.map(({ title, pct, resetsAt }) => {
           const tone = toneOf(pct)
           return (
-            <Box key={title} flexDirection="row" gap={1}>
+            <Box key={title} flexDirection="row" flexShrink={0} gap={1}>
               <Text bold>{title}</Text>
               <Text {...(tone ? { color: tone } : {})}>{`${pct}%`}</Text>
               {resetsAt ? <Text dimColor>{`· ${formatReset(resetsAt, now)}`}</Text> : null}
@@ -107,7 +108,7 @@ export const register: Register = on => {
           )
         })}
         {repo ? (
-          <Box key="where" flexDirection="row" gap={1}>
+          <Box key="where" flexDirection="row" flexShrink={0} gap={1}>
             <Text bold>{repo}</Text>
             {model ? <Text>{modelName(model)}</Text> : null}
             {effort ? <Text dimColor>{`· ${effort}`}</Text> : null}
