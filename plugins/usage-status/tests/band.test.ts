@@ -25,10 +25,10 @@ function engine(on: On): void {
 test('한 줄: 5h·7d·Context, 막대·used·Resets·시간대 없음, 사용량별 색', async ($, on) => {
   engine(on)
   await $.session.measure({
-    context: { window: 1_000_000, tokens: 110_000, percent: 11 },
+    context: { window: 1_000_000, tokens: 450_000, percent: 45 },
     rateLimits: [
       { kind: 'five_hour', percentUsed: 82.9, resetsAt: new Date(NOW + 2 * HOUR).toISOString() },
-      { kind: 'seven_day', percentUsed: 12, resetsAt: new Date(NOW + 72 * HOUR).toISOString() },
+      { kind: 'seven_day', percentUsed: 39, resetsAt: new Date(NOW + 72 * HOUR).toISOString() },
       { kind: 'spend_limit', percentUsed: 50 },
     ],
     changed: ['context', 'rateLimits'],
@@ -44,9 +44,9 @@ test('한 줄: 5h·7d·Context, 막대·used·Resets·시간대 없음, 사용�
     // spend_limit 은 그리지 않음 → 제목 3개
     expect(await ui.findAll({ type: 'Text', text: /^(Current (session|week)|Context)$/ })).toHaveLength(3)
 
-    expect((await ui.find({ type: 'Text', text: '82%' }))?.props.color).toBe('warning')
-    expect((await ui.find({ type: 'Text', text: '12%' }))?.props.color).toBeUndefined()
-    expect((await ui.find({ type: 'Text', text: '11%' }))?.props.color).toBeUndefined()
+    expect((await ui.find({ type: 'Text', text: '82%' }))?.props.color).toBe('#ff8700')
+    expect((await ui.find({ type: 'Text', text: '39%' }))?.props.color).toBeUndefined()
+    expect((await ui.find({ type: 'Text', text: '45%' }))?.props.color).toBe('warning')
     expect(await ui.find({ type: 'Text', text: /^· \d{1,2}(:\d\d)?[ap]m$/ })).toBeDefined()
     expect(await ui.find({ type: 'Text', text: /^· [A-Z][a-z]{2} \d{1,2},? (\d{4},? )?(at )?\d{1,2}(:\d\d)?[ap]m$/ })).toBeDefined()
 
@@ -55,15 +55,16 @@ test('한 줄: 5h·7d·Context, 막대·used·Resets·시간대 없음, 사용�
   }
 })
 
-test('한도 도달 → error · 컨텍스트 미측정이면 Context 생략', async ($, on) => {
+test('경계값 80% 주황·40% 노랑 · 컨텍스트 미측정이면 Context 생략', async ($, on) => {
   engine(on)
   await $.session.measure({
     context: { window: 1_000_000 },
-    rateLimits: [{ kind: 'five_hour', percentUsed: 100 }],
+    rateLimits: [{ kind: 'five_hour', percentUsed: 80 }, { kind: 'seven_day', percentUsed: 40 }],
     changed: ['rateLimits'],
   })
   const ui = await $.ui.mount({ plugin: 'usage-status', surface: 'terminal', ...BAND })
-  expect((await ui.find({ type: 'Text', text: '100%' }))?.props.color).toBe('error')
+  expect((await ui.find({ type: 'Text', text: '80%' }))?.props.color).toBe('#ff8700')
+  expect((await ui.find({ type: 'Text', text: '40%' }))?.props.color).toBe('warning')
   expect(await ui.find({ type: 'Text', text: 'Context' })).toBeUndefined()
 })
 

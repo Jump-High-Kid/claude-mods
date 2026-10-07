@@ -4,9 +4,10 @@ import type { Register } from 'claude-code'
 import type { Limit, Where } from '../types'
 
 // 제목·리셋 시각 = /usage 화면(2.1.289 바이너리 실측)에서 따오고, 막대·'used'·시간대는 뺀 한 줄 요약.
-// 70% 경고 임계 = 기본 경고 알림.
 const TITLES: Record<string, string> = { five_hour: 'Current session', seven_day: 'Current week' }
-const WARN_AT = 70
+const YELLOW_AT = 40
+const ORANGE_AT = 80
+const ORANGE = '#ff8700' // 테마에 주황 키가 없어 고정색(xterm 208)
 const GAP = 3 // 묶음 사이 칸
 const MIN_REPO = 4 // 이보다 짧게 줄여야 하면 줄이지 않고 다음 줄로 넘김
 
@@ -16,10 +17,10 @@ const context = atom({ plugin: 'usage-status', key: 'context' } as const, null a
 // 레포 이름·모델·effort — effort 는 첫 요청(turn.step) 전엔 모름
 const where = atom({ plugin: 'usage-status', key: 'where' } as const, {} as Where)
 
-// 70% 이상 warning, 한도 도달 error — 테마 키. 그 아래는 기본색
+// 3단계: 40% 미만 기본색, 40% 이상 노랑(테마 warning), 80% 이상 주황
 function toneOf(pct: number): string | undefined {
-  if (pct >= 100) return 'error'
-  if (pct >= WARN_AT) return 'warning'
+  if (pct >= ORANGE_AT) return ORANGE
+  if (pct >= YELLOW_AT) return 'warning'
   return undefined
 }
 

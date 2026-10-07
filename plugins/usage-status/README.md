@@ -10,7 +10,7 @@ Current session 56% · 1:50pm   Current week 69% · 9am   Context 11%   my-repo 
 - **Context**: how full this conversation's context window is
 - **repo · model · effort**: the git repository's folder name, the main loop's model, and the effort actually sent
 
-Percentages turn the theme's warning color at 70% and error at 100%. No dependencies, no network, no file access: it only reads the session's own figures.
+Percentages stay the default color below 40%, turn the theme's warning (yellow) at 40% and orange at 80%. No dependencies, no network, no file access: it only reads the session's own figures.
 
 ## Notes
 
