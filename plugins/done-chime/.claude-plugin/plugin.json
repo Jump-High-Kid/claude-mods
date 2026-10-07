@@ -1,0 +1,10 @@
+{
+  "name": "done-chime",
+  "version": "0.1.0",
+  "description": "Chimes when a long turn finishes and when a permission prompt is waiting",
+  "author": { "name": "Jump-High-Kid", "url": "https://github.com/Jump-High-Kid" },
+  "homepage": "https://github.com/Jump-High-Kid/claude-mods",
+  "repository": "https://github.com/Jump-High-Kid/claude-mods",
+  "license": "MIT",
+  "keywords": ["mod", "sound", "notification", "chime"]
+}
