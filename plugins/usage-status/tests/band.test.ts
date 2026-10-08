@@ -99,6 +99,22 @@ test('레포·모델·effort: session.start 로 레포·모델, 메인 루프 tu
   }
 })
 
+test('/clear 뒤처럼 session.start 없이 시작해도 첫 메인 turn.step 에서 레포를 채움', async ($, on) => {
+  engine(on)
+  on('session.repo', () => ({ value: { root: '/Users/x/Projects/ai-clinic-builder', remote: null, internal: false, name: null } }))
+  on('turn.step', async function* (_$, e) {
+    return { turnId: e.turnId, index: e.index, answer: '', toolUses: [], stopReason: 'end_turn' as const, usage: null }
+  })
+
+  for await (const _ of $.turn.step({ turnId: 't', index: 0, model: 'claude-opus-5-5[1m]', effort: 'high', messageCount: 1 })) {
+    // 스트림 끝까지 읽기
+  }
+
+  const ui = await $.ui.mount({ plugin: 'usage-status', surface: 'terminal', ...BAND })
+  expect(await ui.find({ type: 'Text', text: 'ai-clinic-builder' })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: 'Opus 5.5 (1M)' })).toBeDefined()
+})
+
 test('좁은 화면: 레포가 다음 줄로 밀릴 상황이면 이름을 줄여 앞 줄에 붙임', async ($, on) => {
   engine(on)
   on('session.start', (_$, e) => ({ cwd: e.cwd }))

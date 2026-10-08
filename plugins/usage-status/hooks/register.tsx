@@ -1,5 +1,5 @@
 import { atom, read, update } from 'claude-code'
-import type { Register } from 'claude-code'
+import type { EngineInterface, Register } from 'claude-code'
 
 import type { Limit, Where } from '../types'
 
@@ -61,6 +61,12 @@ function fitRepo(repo: string, before: number[], rest: number, columns: number):
   return `${repo.slice(0, room - 1)}…`
 }
 
+// 레포 루트 폴더명 (git 밖이면 세션 루트)
+async function repoName($: EngineInterface): Promise<string | undefined> {
+  const root = (await $.session.repo())?.root ?? (await $.session.root())
+  return root.split('/').pop()
+}
+
 export const register: Register = on => {
   // 리로드·재개 직후에도 다음 측정까지 비어 있지 않게 한 번 채운다
   on('session.start', async ($, e, next) => {
@@ -68,17 +74,21 @@ export const register: Register = on => {
     const usage = await $.session.usage()
     await update($, limits, () => [...usage.rateLimits])
     await update($, context, () => usage.context.percent ?? null)
-    const root = (await $.session.repo())?.root ?? (await $.session.root())
+    const repo = await repoName($)
     const model = await $.session.model()
-    await update($, where, w => ({ ...w, repo: root.split('/').pop(), model }))
+    await update($, where, w => ({ ...w, repo, model }))
     return result
   })
 
   // 메인 루프가 실제로 보내는 모델·effort (서브에이전트 요청은 제외)
+  // /clear 는 상태를 비우지만 session.start 가 다시 오지 않음 → 레포가 비었으면 여기서 다시 채운다
   on('turn.step', async function* ($, e, next) {
     if (!e.agentId) {
       const effort = e.effort === undefined ? undefined : String(e.effort)
-      await update($, where, w => (w.model === e.model && w.effort === effort ? w : { ...w, model: e.model, effort }))
+      const repo = (await read($, where)).repo ?? (await repoName($))
+      await update($, where, w =>
+        w.model === e.model && w.effort === effort && w.repo === repo ? w : { ...w, repo, model: e.model, effort },
+      )
     }
     return yield* next(e)
   })
