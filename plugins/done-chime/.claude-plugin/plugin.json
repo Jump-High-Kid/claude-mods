@@ -1,7 +1,7 @@
 {
   "name": "done-chime",
-  "version": "0.1.0",
-  "description": "Chimes when a long turn finishes and when a permission prompt is waiting",
+  "version": "0.2.0",
+  "description": "Chimes when a long turn finishes and when a permission prompt is waiting; /chime to toggle",
   "author": { "name": "Jump-High-Kid", "url": "https://github.com/Jump-High-Kid" },
   "homepage": "https://github.com/Jump-High-Kid/claude-mods",
   "repository": "https://github.com/Jump-High-Kid/claude-mods",

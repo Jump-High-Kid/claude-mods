@@ -1,12 +1,20 @@
 {
   "name": "jump-high-kid",
   "description": "Small Claude Code mods by Jump-High-Kid",
-  "owner": { "name": "Jump-High-Kid", "url": "https://github.com/Jump-High-Kid" },
+  "owner": {
+    "name": "Jump-High-Kid",
+    "url": "https://github.com/Jump-High-Kid"
+  },
   "plugins": [
     {
       "name": "usage-status",
       "source": "./plugins/usage-status",
       "description": "One line above the prompt: 5h/weekly usage with reset times, context %, repo, model and effort"
+    },
+    {
+      "name": "done-chime",
+      "source": "./plugins/done-chime",
+      "description": "Chimes when a long turn finishes and when a permission prompt is waiting; /chime to toggle"
     }
   ]
 }

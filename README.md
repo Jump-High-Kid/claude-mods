@@ -5,15 +5,17 @@ Small [Claude Code](https://code.claude.com) mods.
 | Mod | What it does |
 |---|---|
 | [usage-status](plugins/usage-status) | One line above the prompt: 5h/weekly usage with reset times, context %, repo, model and effort |
+| [done-chime](plugins/done-chime) | A short sound when a long turn finishes or a permission prompt waits; `/chime` to toggle (macOS) |
 
 ## Install
 
 ```bash
 claude plugin marketplace add Jump-High-Kid/claude-mods
 claude plugin install usage-status@jump-high-kid
+claude plugin install done-chime@jump-high-kid
 ```
 
-Then run `/reload-plugins` in a session, or start a new one. Update with `claude plugin update usage-status@jump-high-kid`.
+Then run `/reload-plugins` in a session, or start a new one. Update with `claude plugin update <mod>@jump-high-kid`.
 
 ## Similar mods
 

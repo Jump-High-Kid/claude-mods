@@ -1,9 +1,10 @@
-import { expect, test } from 'claude-code/testing'
+import { expect, mock, test } from 'claude-code/testing'
 import type { On } from 'claude-code'
 
 // 엔진 대역: 재생 요청을 기록만 하고, 턴·알림은 빈 답
 function engine(on: On): string[] {
   const played: string[] = []
+  mock.store(on)
   on('audio.play', (_$, e) => {
     if (e.clip.asset) played.push(e.clip.asset)
     return { value: undefined }
@@ -33,4 +34,19 @@ test('승인 대기 알림만 승인음', async ($, on) => {
 
   await $.classic.Notification({ message: 'needs permission', notification_type: 'permission_prompt' })
   expect(played).toEqual(['sounds/ask.wav'])
+})
+
+test('/chime off 면 안 울리고, 인자 없이 다시 부르면 켜짐', async ($, on) => {
+  const played = engine(on)
+  const run = (args: string) =>
+    $.command.run({ command: 'chime', args, origin: { kind: 'composer' }, presentation: { isFullscreen: false, columns: 80 } })
+
+  expect((await run('off')).text).toBe('done-chime off')
+  await $.turn.complete({ ...TURN, durationMs: 60_000, isAborted: false })
+  await $.classic.Notification({ message: 'needs permission', notification_type: 'permission_prompt' })
+  expect(played).toEqual([])
+
+  expect((await run('')).text).toBe('done-chime on')
+  await $.turn.complete({ ...TURN, durationMs: 60_000, isAborted: false })
+  expect(played).toEqual(['sounds/done.wav'])
 })
